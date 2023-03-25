@@ -7,39 +7,6 @@ from pygame import Rect, Vector2, Vector3, Color
 
 
 class Pysnakexia:
-    FPS = 30
-    SCREEN_SIZE = Vector2(318, 212)
-    FIELD_RECT = Rect(19, 16, 280, 180)
-
-    BTN_RESUME, BTN_QUIT = True, False
-    AXIS_X, AXIS_Y = True, False
-    DIR_UP, DIR_LEFT, DIR_DOWN, DIR_RIGHT = 0, 1, 2, 3
-
-    # Menu layout
-    MENU_BG_RECT = Rect(74, 66, 170, 110)
-    MENU_TITLE_POS = Vector2(159, 46)
-    BTN_RECT = {BTN_RESUME: Rect(136, 76, 100, 40),
-                BTN_QUIT: Rect(136, 126, 100, 40)}
-    BTN_TEXT = {BTN_RESUME: {True: "Resume", False: "Start"},  # "in_game"
-                BTN_QUIT: {True: "Quit", False: "Quit"}}
-    BTN_TEXT_POS = {BTN_RESUME: Vector2(186, 96),
-                    BTN_QUIT: Vector2(186, 146)}
-    SCORE_TEXT_POS = Vector2(104, 121)
-
-    GRID_RECT = Rect(0, 0, 14, 9)
-    SQUARE_SIZE = 20
-    SNAKE_RADIUS = 8
-    SNAKE_SPEED = 1
-    APPLE_RADIUS = 7
-
-    COLOR = {"bg": Color(40, 100, 10),
-             "field": Color(50, 200, 20),
-             "menu_bg": Color(40, 30, 160),
-             "menu_fg": Color(200, 200, 255),
-             "btn": Color(40, 80, 180),
-             "snake": Color(60, 100, 230),
-             "apple": Color(200, 100, 20)}
-
     class SnakeBend:
         def __init__(self, d, a):
             self.d = d  # direction heading down to the tail
@@ -49,6 +16,39 @@ class Pysnakexia:
             return iter((self.d, self.a))
 
     def __init__(self):
+        self.FPS = 15
+        self.SCREEN_SIZE = Vector2(318, 212)
+        self.FIELD_RECT = Rect(19, 16, 280, 180)
+
+        self.BTN_RESUME, self.BTN_QUIT = True, False
+        self.AXIS_X, self.AXIS_Y = True, False
+        self.DIR_UP, self.DIR_LEFT, self.DIR_DOWN, self.DIR_RIGHT = 0, 1, 2, 3
+
+        # Menu layout
+        self.MENU_BG_RECT = Rect(74, 66, 170, 110)
+        self.MENU_TITLE_POS = Vector2(159, 46)
+        self.BTN_RECT = {self.BTN_RESUME: Rect(136, 76, 100, 40),
+                         self.BTN_QUIT: Rect(136, 126, 100, 40)}
+        self.BTN_TEXT = {self.BTN_RESUME: {True: "Resume", False: "Start"},  # "in_game"
+                         self.BTN_QUIT: {True: "Quit", False: "Quit"}}
+        self.BTN_TEXT_POS = {self.BTN_RESUME: Vector2(186, 96),
+                             self.BTN_QUIT: Vector2(186, 146)}
+        self.SCORE_TEXT_POS = Vector2(104, 121)
+
+        self.GRID_RECT = Rect(0, 0, 14, 9)
+        self.SQUARE_SIZE = 20
+        self.SNAKE_RADIUS = 8
+        self.SNAKE_SPEED = 1
+        self.APPLE_RADIUS = 7
+
+        self.COLOR = {"bg": Color(40, 100, 10),
+                      "field": Color(50, 200, 20),
+                      "menu_bg": Color(40, 30, 160),
+                      "menu_fg": Color(200, 200, 255),
+                      "btn": Color(40, 80, 180),
+                      "snake": Color(60, 100, 230),
+                      "apple": Color(200, 100, 20)}
+
         pygame.init()
         self.clock = pygame.time.Clock()
         self.font = pygame.font.Font(None, 21)
@@ -201,7 +201,7 @@ class Pysnakexia:
         else:
             fact = (self.game_ticks % self.tick_cycle)
             fact /= self.tick_cycle
-            fact = (-math.cos(fact * math.tau) * 0.5 + 0.5) * 0.5
+            fact = (-math.cos(fact * math.pi * 2) * 0.5 + 0.5) * 0.5
             fact *= self.tick_cycle
             offset *= fact
 
@@ -237,7 +237,7 @@ class Pysnakexia:
         pos -= Vector2(self.SQUARE_SIZE // 2)
         pos += Vector2(abs(v.x), abs(v.y)) * self.SQUARE_SIZE // 2
         size = Vector2(1, 1) - Vector2(abs(v.x), abs(v.y))
-        size -= v * 0.52
+        size -= v * (0.5 + self.clock.get_time() / 2600)
         size *= self.SQUARE_SIZE
         rect = Rect(pos, size)
         rect.normalize()
@@ -267,9 +267,9 @@ class Pysnakexia:
             self.draw_btn(self.BTN_RESUME)
             self.draw_btn(self.BTN_QUIT)
             pos = self.SCORE_TEXT_POS.copy()
-            pos.x -= self.APPLE_RADIUS * 2
+            pos.x -= self.APPLE_RADIUS * 1.5
             self.draw_apple(pos)
-            pos.x += self.APPLE_RADIUS * 2 + 8
+            pos.x += self.APPLE_RADIUS * 2 + 6
             self.draw_text(self.score, self.COLOR["menu_fg"], pos)
 
         else:
@@ -314,11 +314,10 @@ class Pysnakexia:
 
         self.draw_apple(self.get_screen_pos(self.apple_pos))
 
-    @classmethod
-    def get_screen_pos(cls, grid_pos, subtract_1=False):
-        pos = Vector2(cls.FIELD_RECT.topleft)
-        pos += grid_pos * cls.SQUARE_SIZE
-        pos += Vector2(cls.SQUARE_SIZE) // 2
+    def get_screen_pos(self, grid_pos, subtract_1=False):
+        pos = Vector2(self.FIELD_RECT.topleft)
+        pos += grid_pos * self.SQUARE_SIZE
+        pos += Vector2(self.SQUARE_SIZE) // 2
         if subtract_1:
             pos -= Vector2(1, 1)
         return pos
@@ -327,40 +326,36 @@ class Pysnakexia:
     def get_axis(d):
         return d % 2 == 0
 
-    @classmethod
-    def get_dir_vect(cls, d):
+    def get_dir_vect(self, d):
         return {
-            cls.DIR_UP: Vector2(0, -1),
-            cls.DIR_LEFT: Vector2(-1, 0),
-            cls.DIR_DOWN: Vector2(0, 1),
-            cls.DIR_RIGHT: Vector2(1, 0)
+            self.DIR_UP: Vector2(0, -1),
+            self.DIR_LEFT: Vector2(-1, 0),
+            self.DIR_DOWN: Vector2(0, 1),
+            self.DIR_RIGHT: Vector2(1, 0)
         }[d]
 
-    @classmethod
-    def get_dir(cls, key):
+    def get_dir(self, key):
         return {
-            pygame.K_UP: cls.DIR_UP, pygame.K_LEFT: cls.DIR_LEFT,
-            pygame.K_DOWN: cls.DIR_DOWN, pygame.K_RIGHT: cls.DIR_RIGHT
+            pygame.K_UP: self.DIR_UP, pygame.K_LEFT: self.DIR_LEFT,
+            pygame.K_DOWN: self.DIR_DOWN, pygame.K_RIGHT: self.DIR_RIGHT
         }[key]
 
     @staticmethod
     def turn(d, a):
         return (d + a) % 4
 
-    @classmethod
-    def turn_round(cls, d):
-        return cls.turn(d, 2)
+    def turn_round(self, d):
+        return self.turn(d, 2)
 
-    @classmethod
-    def move(cls, pos, d, a):
+    def move(self, pos, d, a):
         pos = pos.copy()
-        if d == cls.DIR_UP:
+        if d == self.DIR_UP:
             pos.y -= a
-        elif d == cls.DIR_LEFT:
+        elif d == self.DIR_LEFT:
             pos.x -= a
-        elif d == cls.DIR_DOWN:
+        elif d == self.DIR_DOWN:
             pos.y += a
-        elif d == cls.DIR_RIGHT:
+        elif d == self.DIR_RIGHT:
             pos.x += a
         return pos
 
@@ -390,10 +385,11 @@ class Pysnakexia:
         if btn == self.menu_selected_btn:
             x, y, w, h = self.BTN_RECT[btn]
             x, y, w, h = x - 2, y - 2, w + 4, h + 4
-            draw.rect(self.screen, self.COLOR["menu_fg"], (x, y, w, h))
+            draw.rect(self.screen, self.COLOR["menu_fg"], Rect(x, y, w, h))
         else:
             r, g, b, _ = color
-            color = tuple(Vector3(r, g, b) * 0.85)
+            color = Vector3(r, g, b) * 0.85
+            color = Color(int(color.x), int(color.y), int(color.z))
         draw.rect(self.screen, color, self.BTN_RECT[btn])
         self.draw_text(self.BTN_TEXT[btn][self.in_game],
                        self.COLOR["menu_fg"],
@@ -405,7 +401,26 @@ class Pysnakexia:
     def draw_field(self, rect=None):
         if not rect:
             rect = self.FIELD_RECT
+        rect.normalize()
         draw.rect(self.screen, self.COLOR["field"], rect)
+
+        if rect.x < self.FIELD_RECT.x:
+            rect.x = self.FIELD_RECT.x
+            rect.w = -2
+        elif rect.x + rect.w > self.FIELD_RECT.x + self.FIELD_RECT.w:
+            rect.x = self.FIELD_RECT.x + self.FIELD_RECT.w
+            rect.w = 2
+        elif rect.y < self.FIELD_RECT.y:
+            rect.y = self.FIELD_RECT.y
+            rect.h = -2
+        elif rect.y + rect.h > self.FIELD_RECT.y + self.FIELD_RECT.h:
+            rect.y = self.FIELD_RECT.y + self.FIELD_RECT.h
+            rect.h = 2
+
+        else:
+            return
+
+        draw.rect(self.screen, self.COLOR["bg"], rect.normalize())
 
         # for x in range(self.GRID_RECT.w):
         #     for y in range(self.GRID_RECT.h):
