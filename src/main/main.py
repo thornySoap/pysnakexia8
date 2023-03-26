@@ -16,7 +16,7 @@ class Pysnakexia:
             return iter((self.d, self.a))
 
     def __init__(self):
-        self.FPS = 15
+        self.FPS = 30
         self.SCREEN_SIZE = Vector2(318, 212)
         self.FIELD_RECT = Rect(19, 16, 280, 180)
 
@@ -29,7 +29,7 @@ class Pysnakexia:
         self.MENU_TITLE_POS = Vector2(159, 46)
         self.BTN_RECT = {self.BTN_RESUME: Rect(136, 76, 100, 40),
                          self.BTN_QUIT: Rect(136, 126, 100, 40)}
-        self.BTN_TEXT = {self.BTN_RESUME: {True: "Resume", False: "Start"},  # "in_game"
+        self.BTN_TEXT = {self.BTN_RESUME: {True: "Resume", False: "Start"},
                          self.BTN_QUIT: {True: "Quit", False: "Quit"}}
         self.BTN_TEXT_POS = {self.BTN_RESUME: Vector2(186, 96),
                              self.BTN_QUIT: Vector2(186, 146)}
@@ -38,7 +38,7 @@ class Pysnakexia:
         self.GRID_RECT = Rect(0, 0, 14, 9)
         self.SQUARE_SIZE = 20
         self.SNAKE_RADIUS = 8
-        self.SNAKE_SPEED = 1
+        self.SNAKE_SPEED = 3  # High speed needs higher FPS
         self.APPLE_RADIUS = 7
 
         self.COLOR = {"bg": Color(40, 100, 10),
@@ -54,7 +54,7 @@ class Pysnakexia:
         self.font = pygame.font.Font(None, 21)
 
         self.screen = None
-        self.tick_cycle = self.FPS / self.SNAKE_SPEED
+        self.tick_cycle = self.FPS // self.SNAKE_SPEED
 
         self.main_loop = True
         self.in_game = False
@@ -71,6 +71,7 @@ class Pysnakexia:
         self.next_turn = None
         self.apple_pos = None  # Vector2
         self.eating_apple = None
+        self.clock_time_seconds = None
 
     def __call__(self):
         self.run()
@@ -85,9 +86,8 @@ class Pysnakexia:
         pygame.event.set_allowed(pygame.QUIT)
         pygame.event.set_allowed(pygame.KEYDOWN)
 
-        background = pygame.Surface(self.SCREEN_SIZE).convert()
-        background.fill(self.COLOR["bg"])
-        self.screen.blit(background, (0, 0))
+        draw.rect(self.screen, self.COLOR["bg"],
+                  Rect(Vector2(0, 0), self.SCREEN_SIZE))
         self.draw_field()
         self.screen_refresh()
 
@@ -153,6 +153,9 @@ class Pysnakexia:
                     self.next_turn = d
 
         if self.game_ticks % self.tick_cycle == 0:
+            self.draw_snake_end(Vector2(0, 0))
+
+            # Control
             if self.eating_apple:
                 self.eating_apple = False
                 self.score += 1
@@ -183,29 +186,69 @@ class Pysnakexia:
                 end.a -= 1
 
             if end.a <= 0:
-                if self.eating_apple or end.a < 0:
-                    self.snake.remove(end)
+                if self.eating_apple:
+                    del self.snake[len(self.snake) - 1]
                 if end.a < 0:
+                    del self.snake[len(self.snake) - 1]
                     self.snake[len(self.snake) - 1].a -= 1
 
             self.snake_end = self.calc_snake_end()
 
-        # Animate end
-        d = self.turn_round(self.snake[len(self.snake) - 1].d)
-        v = self.get_dir_vect(d)
+            self.clock_time_seconds = self.clock.get_time() / 1000
 
-        offset = v * self.SQUARE_SIZE * self.clock.get_time() / 1000
-        if not self.eating_apple:
-            offset *= self.game_ticks % self.tick_cycle
-            offset -= v * self.SQUARE_SIZE
         else:
-            fact = (self.game_ticks % self.tick_cycle)
-            fact /= self.tick_cycle
-            fact = (-math.cos(fact * math.pi * 2) * 0.5 + 0.5) * 0.5
-            fact *= self.tick_cycle
-            offset *= fact
+            # Animate end
+            d = self.turn_round(self.snake[len(self.snake) - 1].d)
+            v = self.get_dir_vect(d) * self.SQUARE_SIZE
+            offset = v * self.clock_time_seconds * self.SNAKE_SPEED
+            if not self.eating_apple:
+                offset *= self.game_ticks % self.tick_cycle
+                offset -= v
+            else:
+                fact = (self.game_ticks % self.tick_cycle)
+                fact /= self.tick_cycle
+                fact = (-math.cos(fact * math.pi * 2) * 0.5 + 0.5) * 0.5
+                fact *= self.tick_cycle
+                offset *= fact
 
-        self.draw_snake_end(offset)
+            self.draw_snake_end(offset)
+
+        # Animate head
+        d = self.turn_round(self.snake[0].d)
+        v = self.get_dir_vect(d) * self.SQUARE_SIZE
+        offset = v * self.clock_time_seconds * self.SNAKE_SPEED
+        offset *= self.game_ticks % self.tick_cycle
+        offset -= v
+        draw.circle(self.screen, self.COLOR["snake"],
+                    self.get_screen_pos(self.snake_head) + offset,
+                    self.SNAKE_RADIUS)
+        draw.line(self.screen, self.COLOR["snake"],
+                  self.get_screen_pos(self.snake_head,
+                                      subtract_1=True) + offset,
+                  self.get_screen_pos(self.move(self.snake_head,
+                                                self.snake[0].d,
+                                                min((self.snake[0].a, 2))),
+                                      subtract_1=True),
+                  width=self.SNAKE_RADIUS * 2)
+
+        self.game_ticks += 1
+
+    def draw_snake_end(self, offset):
+        d = self.snake[len(self.snake) - 1].d
+        v = self.get_dir_vect(d) * self.SQUARE_SIZE
+        pos = self.get_screen_pos(self.snake_end, subtract_1=True) + offset
+        last_pos = pos + v * self.clock_time_seconds * self.SNAKE_SPEED
+        last_pos_drawn = last_pos + v * 0.5
+        last_pos_drawn.x = max(last_pos_drawn.x, self.FIELD_RECT.x)
+        last_pos_drawn.y = max(last_pos_drawn.y, self.FIELD_RECT.y)
+        last_pos_drawn.x = min(last_pos_drawn.x, self.FIELD_RECT.right - 1)
+        last_pos_drawn.y = min(last_pos_drawn.y, self.FIELD_RECT.bottom - 1)
+        draw.line(self.screen, self.COLOR["field"],
+                  pos, last_pos_drawn, width=self.SQUARE_SIZE)
+
+        draw.circle(self.screen, self.COLOR["snake"],
+                    self.get_screen_pos(self.snake_end) + offset,
+                    self.SNAKE_RADIUS)
 
         if self.snake[len(self.snake) - 1].a == 0:
             draw.line(self.screen, self.COLOR["snake"],
@@ -215,48 +258,6 @@ class Pysnakexia:
                                     self.snake[len(self.snake) - 2].d, -1),
                           subtract_1=True
                       ),
-                      width=self.SNAKE_RADIUS * 2)
-
-        # Animate head
-        d = self.turn_round(self.snake[0].d)
-        v = self.get_dir_vect(d)
-        offset = v * self.SQUARE_SIZE * self.clock.get_time() / 1000
-        offset *= self.game_ticks % self.tick_cycle
-        offset -= v * self.SQUARE_SIZE
-        draw.circle(self.screen, self.COLOR["snake"],
-                    self.get_screen_pos(self.snake_head) + offset,
-                    self.SNAKE_RADIUS)
-
-        self.game_ticks += 1
-
-    def draw_snake_end(self, offset):
-        d = self.turn_round(self.snake[len(self.snake) - 1].d)
-        v = self.get_dir_vect(d)
-
-        pos = self.get_screen_pos(self.snake_end) + offset
-        pos -= Vector2(self.SQUARE_SIZE // 2)
-        pos += Vector2(abs(v.x), abs(v.y)) * self.SQUARE_SIZE // 2
-        size = Vector2(1, 1) - Vector2(abs(v.x), abs(v.y))
-        size -= v * (0.5 + self.clock.get_time() / 2600)
-        size *= self.SQUARE_SIZE
-        rect = Rect(pos, size)
-        rect.normalize()
-        self.draw_field(rect)
-
-        # if self.eating_apple:
-        #     draw.circle(self.screen, (255, 0, 0),
-        #                 self.get_screen_pos(self.snake_end) + offset,
-        #                 self.SNAKE_RADIUS)
-        #     return
-
-        draw.circle(self.screen, self.COLOR["snake"],
-                    self.get_screen_pos(self.snake_end) + offset,
-                    self.SNAKE_RADIUS)
-        if not self.eating_apple:
-            draw.line(self.screen, self.COLOR["snake"],
-                      self.get_screen_pos(self.snake_end, subtract_1=True)
-                      + offset,
-                      self.get_screen_pos(self.snake_end, subtract_1=True),
                       width=self.SNAKE_RADIUS * 2)
 
     def screen_refresh(self):
@@ -298,6 +299,7 @@ class Pysnakexia:
         self.snake_end = self.calc_snake_end()
         self.next_turn = None
         self.eating_apple = False
+        self.clock_time_seconds = self.clock.get_time() / 1000
         self.spawn_apple()
 
     def game_over(self):
@@ -305,11 +307,11 @@ class Pysnakexia:
         self.toggle_pause()
 
     def spawn_apple(self):
-        apple_pos = Vector2(randint(0, self.GRID_RECT.w-1),
-                            randint(0, self.GRID_RECT.h-1))
+        apple_pos = Vector2(randint(0, self.GRID_RECT.w - 1),
+                            randint(0, self.GRID_RECT.h - 1))
         while apple_pos == self.snake_head or self.snake_occupied(apple_pos):
-            apple_pos = Vector2(randint(0, self.GRID_RECT.w-1),
-                                randint(0, self.GRID_RECT.h-1))
+            apple_pos = Vector2(randint(0, self.GRID_RECT.w - 1),
+                                randint(0, self.GRID_RECT.h - 1))
         self.apple_pos = apple_pos
 
         self.draw_apple(self.get_screen_pos(self.apple_pos))
@@ -398,29 +400,8 @@ class Pysnakexia:
     def draw_apple(self, pos):
         draw.circle(self.screen, self.COLOR["apple"], pos, self.APPLE_RADIUS)
 
-    def draw_field(self, rect=None):
-        if not rect:
-            rect = self.FIELD_RECT
-        rect.normalize()
-        draw.rect(self.screen, self.COLOR["field"], rect)
-
-        if rect.x < self.FIELD_RECT.x:
-            rect.x = self.FIELD_RECT.x
-            rect.w = -2
-        elif rect.x + rect.w > self.FIELD_RECT.x + self.FIELD_RECT.w:
-            rect.x = self.FIELD_RECT.x + self.FIELD_RECT.w
-            rect.w = 2
-        elif rect.y < self.FIELD_RECT.y:
-            rect.y = self.FIELD_RECT.y
-            rect.h = -2
-        elif rect.y + rect.h > self.FIELD_RECT.y + self.FIELD_RECT.h:
-            rect.y = self.FIELD_RECT.y + self.FIELD_RECT.h
-            rect.h = 2
-
-        else:
-            return
-
-        draw.rect(self.screen, self.COLOR["bg"], rect.normalize())
+    def draw_field(self):
+        draw.rect(self.screen, self.COLOR["field"], self.FIELD_RECT)
 
         # for x in range(self.GRID_RECT.w):
         #     for y in range(self.GRID_RECT.h):
