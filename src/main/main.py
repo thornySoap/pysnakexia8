@@ -16,7 +16,7 @@ class Pysnakexia:
             return iter((self.d, self.a))
 
     def __init__(self):
-        self.FPS = 30
+        self.FPS = 16
         self.SCREEN_SIZE = Vector2(318, 212)
         self.FIELD_RECT = Rect(19, 16, 280, 180)
 
@@ -38,7 +38,7 @@ class Pysnakexia:
         self.GRID_RECT = Rect(0, 0, 14, 9)
         self.SQUARE_SIZE = 20
         self.SNAKE_RADIUS = 8
-        self.SNAKE_SPEED = 3  # High speed needs higher FPS
+        self.SNAKE_SPEED = 2.6  # High speed needs higher FPS
         self.APPLE_RADIUS = 7
 
         self.COLOR = {"bg": Color(40, 100, 10),

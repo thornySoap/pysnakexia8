@@ -232,6 +232,10 @@ class Rect:
     def __getattr__(self, name):
         if name == "topleft":
             return Vector2(self.x, self.y)
+        if name == "right":
+            return self.x + self.w
+        if name == "bottom":
+            return self.y + self.h
         elif name == "size":
             return Vector2(self.w, self.h)
 
@@ -289,7 +293,4 @@ class Color:
 
     def set(self):
         set_color(self.r, self.g, self.b)
-
-
-
 
