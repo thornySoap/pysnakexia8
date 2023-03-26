@@ -28,7 +28,7 @@ python main.py  # or "python3 main.py"
 ```
 
 ### TI-Nspire
-1. Download .tns-file from [releases](https://github.com/thornySoap/pysnakexia8/releases/tag/release)
+1. Download .tns-file from [releases](https://github.com/thornySoap/pysnakexia8/releases)
 2. Use https://nspireconnect.ti.com/ (only Chromium based browsers) to transfer the file to your calculator (Linux-users: [Chrome USB udev](https://developer.chrome.com/docs/apps/app_usb/#caveats))
 3. Open it. On the first page (`main.py`) press `Ctrl+R` to run
 
