@@ -149,7 +149,7 @@ class font:
             self.color.set()
             pos = Vector2(pos).flip_y()
             draw_text(pos.x, pos.y, self.text)
-        
+
         def get_size(self):
             return Vector2(len(self.text) *  7, -12)
 
@@ -174,6 +174,12 @@ class Vector2:
 
     def copy(self):
         return Vector2(self.x, self.y)
+
+    def length(self):
+        return (self.x ** 2 + self.y ** 2) ** 0.5
+
+    def normalize(self):
+        return self / self.length()
 
     def __iter__(self):
         return iter((self.x, self.y))
@@ -293,4 +299,3 @@ class Color:
 
     def set(self):
         set_color(self.r, self.g, self.b)
-
