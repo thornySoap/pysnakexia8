@@ -14,6 +14,9 @@ Snake suitable for running with Pygame or on TI-Nspire's Python platform.
 
 </td>
 </tr>
+<tr>
+<td align=right colspan=2>v1.1</td>
+</tr>
 </table>
 
 
@@ -33,7 +36,7 @@ python main.py  # or "python3 main.py"
 3. Open it. On the first page (`main.py`) press `Ctrl+R` to run
 
 ## "build"
-Use TI-Nspire Student Software and copy-paste the code of `src/main/main.py` and `src/pygame/pygame.py` into two pages (`main.py` and `pygame.py`) in one document.
+Use TI-Nspire Student Software and copy-paste the code of all `.py`-files into separate Python pages in one document.
 
 ## License
 [MIT-License](https://github.com/thornySoap/pysnakexia8/blob/master/LICENSE)
