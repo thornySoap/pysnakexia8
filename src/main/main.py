@@ -16,7 +16,7 @@ class Pysnakexia:
             return iter((self.d, self.a))
 
     def __init__(self):
-        self.FPS = 16
+        self.FPS = 40
         self.SCREEN_SIZE = Vector2(318, 212)
         self.FIELD_RECT = Rect(19, 16, 280, 180)
 
@@ -38,7 +38,8 @@ class Pysnakexia:
         self.GRID_RECT = Rect(0, 0, 14, 9)
         self.SQUARE_SIZE = 20
         self.SNAKE_RADIUS = 8
-        self.SNAKE_SPEED = 2.6  # High speed needs higher FPS
+        self.EYE_RADIUS = 3
+        self.SNAKE_SPEED = 4  # High speed needs higher FPS
         self.APPLE_RADIUS = 7
 
         self.COLOR = {"bg": Color(40, 100, 10),
@@ -47,6 +48,9 @@ class Pysnakexia:
                       "menu_fg": Color(200, 200, 255),
                       "btn": Color(40, 80, 180),
                       "snake": Color(60, 100, 230),
+                      "eye": Color(250, 250, 250),
+                      "eye_pupil": Color(5, 5, 5),
+                      "eye_closed": Color(40, 70, 170),
                       "apple": Color(200, 100, 20)}
 
         pygame.init()
@@ -129,7 +133,8 @@ class Pysnakexia:
                 self.in_game = True
             self.screen_refresh()
         else:
-            self.screen_refresh()
+            if not self.in_game:
+                self.screen_refresh()
             self.game_paused = True
             self.screen_refresh()
 
@@ -231,6 +236,8 @@ class Pysnakexia:
                                       subtract_1=True),
                   width=self.SNAKE_RADIUS * 2)
 
+        self.draw_snake_eyes(offset)
+
         self.game_ticks += 1
 
     def draw_snake_end(self, offset):
@@ -259,6 +266,29 @@ class Pysnakexia:
                           subtract_1=True
                       ),
                       width=self.SNAKE_RADIUS * 2)
+
+    def draw_snake_eyes(self, offset):
+        def draw_eye():
+            draw.circle(self.screen, self.COLOR["eye" if self.in_game else "eye_closed"], pos, self.EYE_RADIUS)
+
+        v = self.get_dir_vect(self.turn_round(self.snake[0].d))
+        pos = self.get_screen_pos(self.snake_head) + offset
+        offset = v * self.EYE_RADIUS * 1.2
+        pos += offset
+        offset = Vector2(offset.y, offset.x)
+        pos += offset
+        draw_eye()
+        pos -= offset * 2
+        draw_eye()
+        if self.in_game:
+            if not self.eating_apple:
+                v = (self.apple_pos - self.snake_head).normalize()
+            else:
+                v = (self.snake_end - self.snake_head).normalize()
+            pos += v * self.EYE_RADIUS / 2
+            draw.circle(self.screen, self.COLOR["eye_pupil"], pos, 1)
+            pos += offset * 2
+            draw.circle(self.screen, self.COLOR["eye_pupil"], pos, 1)
 
     def screen_refresh(self):
         if self.game_paused:
@@ -290,6 +320,7 @@ class Pysnakexia:
                           self.get_screen_pos(prev_pos, subtract_1=True),
                           self.get_screen_pos(pos, subtract_1=True),
                           width=self.SNAKE_RADIUS * 2)
+            self.draw_snake_eyes(Vector2(0))
 
     def reset_game(self):
         self.game_ticks = 0
