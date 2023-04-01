@@ -1,5 +1,6 @@
 import math
 from random import randint
+from pathlib import Path
 
 import pygame
 from pygame import draw
@@ -33,7 +34,7 @@ class Pysnakexia:
                          self.BTN_QUIT: {True: "Quit", False: "Quit"}}
         self.BTN_TEXT_POS = {self.BTN_RESUME: Vector2(186, 96),
                              self.BTN_QUIT: Vector2(186, 146)}
-        self.SCORE_TEXT_POS = Vector2(104, 121)
+        self.SCORE_TEXT_POS = Vector2(104, 111)
 
         self.GRID_RECT = Rect(0, 0, 14, 9)
         self.SQUARE_SIZE = 20
@@ -56,6 +57,7 @@ class Pysnakexia:
         pygame.init()
         self.clock = pygame.time.Clock()
         self.font = pygame.font.Font(None, 21)
+        self.path_high_score = Path(__file__).resolve().parent / "pysnakexia.high_score"
 
         self.screen = None
         self.tick_cycle = self.FPS // self.SNAKE_SPEED
@@ -64,6 +66,7 @@ class Pysnakexia:
         self.in_game = False
         self.game_paused = True
         self.score = 0
+        self.high_score = self.read_high_score()
 
         self.menu_selected_btn = self.BTN_RESUME
 
@@ -292,8 +295,7 @@ class Pysnakexia:
 
     def screen_refresh(self):
         if self.game_paused:
-            self.draw_text("Pysnakexia",
-                           self.COLOR["menu_bg"], self.MENU_TITLE_POS)
+            self.draw_text("Pysnakexia", self.COLOR["menu_bg"], self.MENU_TITLE_POS)
             draw.rect(self.screen, self.COLOR["menu_bg"], self.MENU_BG_RECT)
             self.draw_btn(self.BTN_RESUME)
             self.draw_btn(self.BTN_QUIT)
@@ -302,6 +304,8 @@ class Pysnakexia:
             self.draw_apple(pos)
             pos.x += self.APPLE_RADIUS * 2 + 6
             self.draw_text(self.score, self.COLOR["menu_fg"], pos)
+            pos.y += 20
+            self.draw_text(self.high_score, self.COLOR["menu_fg"], pos)
 
         else:
             self.draw_field()
@@ -335,6 +339,9 @@ class Pysnakexia:
 
     def game_over(self):
         self.in_game = False
+        if self.score > self.high_score:
+            self.high_score = self.score
+            self.save_high_score()
         self.toggle_pause()
 
     def spawn_apple(self):
@@ -438,6 +445,15 @@ class Pysnakexia:
         #     for y in range(self.GRID_RECT.h):
         #         pos = self.get_screen_pos(Vector2(x, y))
         #         draw.circle(self.screen, (0, 0, 0), pos, 1)
+
+    def read_high_score(self):
+        if self.path_high_score.exists():
+            return int("0" + self.path_high_score.read_text())
+        return 0
+
+    def save_high_score(self):
+        self.path_high_score.touch()
+        self.path_high_score.write_text(str(self.high_score))
 
 
 run = Pysnakexia()

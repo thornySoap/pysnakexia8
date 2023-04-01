@@ -2,3 +2,4 @@ venv/
 pysnakexia8.iml
 .idea/
 *__pycache__*
+*high_score
