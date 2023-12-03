@@ -3,14 +3,14 @@ Snake suitable for running with Pygame or on TI-Nspire's Python platform.
 
 <table>
 <tr>
-<td width=47%>
+<td width=44%>
 
-![VideoCapture_20231130-195953-01](https://github.com/thornySoap/pysnakexia8/assets/115401023/84a44a53-a48f-455f-859b-a0718ee1e0ea)
+![pysnakexia on the calculator](https://github.com/thornySoap/pysnakexia8/assets/115401023/84a44a53-a48f-455f-859b-a0718ee1e0ea)
 
 </td>
 <td>
 
-![Screenshot 2023-03-25 21:46:28](https://user-images.githubusercontent.com/115401023/227740930-d74b4246-9300-4581-a04c-2c60ffeb227f.png)
+![pysnakexia on desktop](https://github.com/thornySoap/pysnakexia8/assets/115401023/b2c131f0-c475-46e3-a091-4055aa5edb0b)
 
 </td>
 </tr>
