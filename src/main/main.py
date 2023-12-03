@@ -17,7 +17,9 @@ class Pysnakexia:
             return iter((self.d, self.a))
 
     def __init__(self):
-        self.FPS = 40
+        self.FPS = 36
+        self.KEY_BUFFER_SIZE = 3
+
         self.SCREEN_SIZE = Vector2(318, 212)
         self.FIELD_RECT = Rect(19, 16, 280, 180)
 
@@ -154,11 +156,11 @@ class Pysnakexia:
 
     def game_tick(self, keys=()):
         for key in keys:
-            if key in (pygame.K_UP, pygame.K_LEFT,
-                       pygame.K_DOWN, pygame.K_RIGHT):
-                d = self.get_dir(key)
-                if not self.get_axis(self.snake[0].d) == self.get_axis(d):
-                    self.next_turn = d
+            if (key in (pygame.K_UP, pygame.K_LEFT,
+                        pygame.K_DOWN, pygame.K_RIGHT)
+                    and (len(self.next_turn) < self.KEY_BUFFER_SIZE)
+                         or self.KEY_BUFFER_SIZE == 0):
+                self.next_turn.append(self.get_dir(key))
 
         if self.game_ticks % self.tick_cycle == 0:
             self.draw_snake_end(Vector2(0, 0))
@@ -169,11 +171,13 @@ class Pysnakexia:
                 self.score += 1
                 self.spawn_apple()
 
-            if self.next_turn is not None:
-                self.snake.insert(0, self.SnakeBend(
-                    self.turn_round(self.next_turn), 0
-                ))
-                self.next_turn = None
+            if len(self.next_turn) > 0:
+                if not self.get_axis(self.snake[0].d) == self.get_axis(self.next_turn[0]):
+                    self.snake.insert(0, self.SnakeBend(
+                        self.turn_round(self.next_turn.pop(0)), 0
+                    ))
+                else:
+                    del self.next_turn[0]
 
             snake_head = self.move(self.snake_head,
                                    self.turn_round(self.snake[0].d), 1)
@@ -332,7 +336,7 @@ class Pysnakexia:
         self.snake_head = Vector2(7, 4)
         self.snake = [self.SnakeBend(self.DIR_LEFT, 3)]
         self.snake_end = self.calc_snake_end()
-        self.next_turn = None
+        self.next_turn = []
         self.eating_apple = False
         self.clock_time_seconds = self.clock.get_time() / 1000
         self.spawn_apple()

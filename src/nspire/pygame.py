@@ -76,15 +76,27 @@ class draw:
 
 class event:
     def __init__(self, key):
+        if key == "home":
+            self.type = QUIT
+            return
+
         self.type = KEYDOWN
         try:
             self.key = {
                 "esc": K_ESCAPE,
+                "menu": K_ESCAPE,
                 "enter": K_RETURN,
+                "center": K_RETURN,
+                "5": K_RETURN,
+                "tab": K_TAB,
                 "up": K_UP,
                 "left": K_LEFT,
                 "down": K_DOWN,
-                "right": K_RIGHT
+                "right": K_RIGHT,
+                "8": K_UP,
+                "4": K_LEFT,
+                "2": K_DOWN,
+                "6": K_RIGHT
             }[key]
         except KeyError:
             self.type = "Invalid"
